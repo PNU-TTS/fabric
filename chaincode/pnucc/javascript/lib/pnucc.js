@@ -11,12 +11,8 @@ const { Contract } = require('fabric-contract-api');
 function printMethodEntry(functionName) { console.info('========= START: ' + functionName + ' =========') }
 function printMethodExit(functionName) { console.info('========= FINISH: ' + functionName + ' E =========') }
 
-function Transaction(
-    id, target, price, quantity, 
-    supplier, buyer, 
-    registeredDate, executedDate) {
+function Transaction(id, target, price, quantity, supplier, buyer, registeredDate, executedDate) {
     this.id = id;
-    
     this.target = target;
     this.price = price;
     this.quantity = quantity;
@@ -34,47 +30,26 @@ class PnuCC extends Contract {
 
     async initLedger(ctx) { 
         printMethodEntry('Initialize Ledger'); 
-        this.NEXT_TRANSACTION_ID = 1;
-        
-        for await (const {key, value} of ctx.stub.getStateByRange('', '')) {
-            const strValue = Buffer.from(value).toString('utf8');
-            let transaction;
-            try {
-                transaction = JSON.parse(strValue);
-                this.NEXT_TRANSACTION_ID += 1;
-            } catch (err) {
-                console.log(err);
-            }
-        }
-
-        printMethodEntry(`Registered Transactions Amount: ${this.NEXT_TRANSACTION_ID}`); 
     }
 
     // REC 매도 등록
     async createNewTransaction(ctx, target, price, quantity, supplier) {
         printMethodEntry('Create New Transaction');
 
-        let transactionAsBytes = await ctx.stub.getState(id);
-
-        if (this.isDataValid(transactionAsBytes)) {
-            throw new Error(`Certificate with ${id} already exist`);
-        }
-
         const currentDateTime = new Date();
+        const currentTimeInSeconds = parseInt(currentDateTime.getTime() / 1000);
+
         const transaction = new Transaction(
-            id = this.NEXT_TRANSACTION_ID, 
-            target = target, price = price, quantity = quantity,
-            supplier = supplier, buyer = null,
-            registeredDate = parseInt(currentDateTime.getTime() / 1000),
-            executedDate = null
+            currentTimeInSeconds,
+            target, price, quantity,
+            supplier, null,
+            currentTimeInSeconds,
+            null
         );
 
-        this.NEXT_TRANSACTION_ID += 1;
-
-        console.log(`${id}, ${price}`);
         console.log(`${JSON.stringify(transaction)}`);
         
-        await ctx.stub.putState(id, Buffer.from(JSON.stringify(transaction)));
+        await ctx.stub.putState(`${currentTimeInSeconds}`, Buffer.from(JSON.stringify(transaction)));
 
         printMethodExit('Create New Transaction ID');
     }
