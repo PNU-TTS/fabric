@@ -43,6 +43,8 @@ Organizations:
 
         OrdererEndpoints:
             - orderer.pnu.com:7050
+            - orderer2.pnu.com:8050
+            - orderer3.pnu.com:9050
 
     - &ManagementPeerOrg
         # DefaultOrg defines the organization which is used in the sampleconfig
