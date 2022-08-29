@@ -30,6 +30,18 @@ class PnuCC extends Contract {
 
     async initLedger(ctx) { 
         printMethodEntry('Initialize Ledger'); 
+        this.NEXT_TRANSACTION_ID = 1;
+        
+        for await (const {key, value} of ctx.stub.getStateByRange('', '')) {
+            const strValue = Buffer.from(value).toString('utf8');
+            let transaction;
+            try {
+                transaction = JSON.parse(strValue);
+                this.NEXT_TRANSACTION_ID += 1;
+            } catch (err) {
+                console.log(err);
+            }
+        }
     }
 
     // REC 매도 등록
@@ -40,7 +52,7 @@ class PnuCC extends Contract {
         const currentTimeInSeconds = parseInt(currentDateTime.getTime() / 1000);
 
         const transaction = new Transaction(
-            currentTimeInSeconds,
+            this.NEXT_TRANSACTION_ID,
             target, price, quantity,
             supplier, null,
             currentTimeInSeconds,
@@ -49,8 +61,9 @@ class PnuCC extends Contract {
 
         console.log(`${JSON.stringify(transaction)}`);
         
-        await ctx.stub.putState(`${currentTimeInSeconds}`, Buffer.from(JSON.stringify(transaction)));
+        await ctx.stub.putState(`${this.NEXT_TRANSACTION_ID}`, Buffer.from(JSON.stringify(transaction)));
 
+        this.NEXT_TRANSACTION_ID += 1;
         printMethodExit('Create New Transaction ID');
     }
 
