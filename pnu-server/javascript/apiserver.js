@@ -186,13 +186,13 @@ app.post('/create/transaction/', async function (req, res) {
         console.log(`Wallet path: ${walletPath}`);
         console.log(`CCP path: ${ccpPath}`);
 
-        const identity = await wallet.get(req.body.userID);
+        const identity = await wallet.get(req.body.buyer);
         if (!identity) {
-            res.status(401).json({error: `An identity for the user "${req.body.userID}" does not exist in the wallet`});
+            res.status(401).json({error: `An identity for the user "${req.body.buyer}" does not exist in the wallet`});
         }
         const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
         const gateway = new Gateway();
-        await gateway.connect(ccp, { wallet, identity: req.body.userID, discovery: { enabled: true, asLocalhost: true } });
+        await gateway.connect(ccp, { wallet, identity: req.body.buyer, discovery: { enabled: true, asLocalhost: true } });
 
         const network = await gateway.getNetwork('rec-trade-channel');
         const contract = network.getContract('pnucc');
