@@ -9,7 +9,9 @@
 export CORE_PEER_TLS_ENABLED=true
 export ORDERER_CA=${PWD}/organizations/ordererOrganizations/pnu.com/orderers/orderer.pnu.com/msp/tlscacerts/tlsca.pnu.com-cert.pem
 export PEER0_MANAGEMENT_PEER_ORG_CA=${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer0.management-peer-org.pnu.com/tls/ca.crt
+export PEER1_MANAGEMENT_PEER_ORG_CA=${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer1.management-peer-org.pnu.com/tls/ca.crt
 export PEER0_REC_CLIENT_PEER_ORG_CA=${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/ca.crt
+export PEER1_REC_CLIENT_PEER_ORG_CA=${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/ca.crt
 export PEER0_ORG3_CA=${PWD}/organizations/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt
 
 # Set OrdererOrg.Admin globals
@@ -30,14 +32,24 @@ setGlobals() {
   echo "Using organization ${USING_ORG}"
   if [ $USING_ORG = "ManagementPeerOrg" ]; then
     export CORE_PEER_LOCALMSPID="ManagementPeerOrgMSP"
-    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_MANAGEMENT_PEER_ORG_CA
     export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/users/Admin@management-peer-org.pnu.com/msp
-    export CORE_PEER_ADDRESS=localhost:7051
+    if [ $2 -eq 0 ]; then
+      export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_MANAGEMENT_PEER_ORG_CA
+      export CORE_PEER_ADDRESS=localhost:7051
+    else
+      export CORE_PEER_TLS_ROOTCERT_FILE=$PEER1_MANAGEMENT_PEER_ORG_CA
+      export CORE_PEER_ADDRESS=localhost:8051
+    fi
   elif [ $USING_ORG = "RecClientPeerOrg" ]; then
     export CORE_PEER_LOCALMSPID="RecClientPeerOrgMSP"
-    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_REC_CLIENT_PEER_ORG_CA
     export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/users/Admin@rec-client-peer-org.pnu.com/msp
-    export CORE_PEER_ADDRESS=localhost:9051
+    if [ $2 -eq 0 ]; then
+      export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_REC_CLIENT_PEER_ORG_CA
+      export CORE_PEER_ADDRESS=localhost:9051
+    else
+      export CORE_PEER_TLS_ROOTCERT_FILE=$PEER1_REC_CLIENT_PEER_ORG_CA
+      export CORE_PEER_ADDRESS=localhost:10051
+    fi
 
   elif [ $USING_ORG -eq 3 ]; then
     export CORE_PEER_LOCALMSPID="Org3MSP"
@@ -64,15 +76,15 @@ parsePeerConnectionParameters() {
     echo "얍얍 $@"
     echo "얍얍 $PEERS"
     echo "얍얍 $PEER_CONN_PARMS"
-    setGlobals $1
+    setGlobals $1 $2
 
     ## Peer 설정
     if [ $1 = "ManagementPeerOrg" ]; then
-      PEER="peer0.management-peer-org"
+      PEER="peer$2.management-peer-org"
     elif [ $1 = "RecClientPeerOrg" ]; then
-      PEER="peer0.rec-client-peer-org"
+      PEER="peer$2.rec-client-peer-org"
     elif [ $1 -eq 3 ]; then
-      PEER="peer0.org$1"
+      PEER="peer$2.org$1"
     else
       echo "============ ERROR !!! ORG Unknown 이므로 peer 정의할 수 없음 ============"
     fi
@@ -86,9 +98,9 @@ parsePeerConnectionParameters() {
 
     ## CA 설정    
     if [ $1 = "ManagementPeerOrg" ]; then
-      TLSINFO=$(eval echo "--tlsRootCertFiles \$PEER0_MANAGEMENT_PEER_ORG_CA")
+      TLSINFO=$(eval echo "--tlsRootCertFiles \$PEER$2_MANAGEMENT_PEER_ORG_CA")
     elif [ $1 = "RecClientPeerOrg" ]; then
-      TLSINFO=$(eval echo "--tlsRootCertFiles \$PEER0_REC_CLIENT_PEER_ORG_CA")
+      TLSINFO=$(eval echo "--tlsRootCertFiles \$PEER$2_REC_CLIENT_PEER_ORG_CA")
     elif [ $1 -eq 3 ]; then
       TLSINFO=$(eval echo "--tlsRootCertFiles \$PEER0_$1_CA")
     else
@@ -98,8 +110,8 @@ parsePeerConnectionParameters() {
 
 
     PEER_CONN_PARMS="$PEER_CONN_PARMS $TLSINFO"
-    # shift by one to get to the next organization
-    shift
+    # 인자가 추가되었기 때문에 2번 shift 합니다!!
+    shift 2
   done
   # remove leading space for output
   PEERS="$(echo -e "$PEERS" | sed -e 's/^[[:space:]]*//')"
