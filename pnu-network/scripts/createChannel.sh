@@ -31,7 +31,7 @@ createChannelTx() {
 
 }
 
-createAncorPeerTx() {
+createAnchorPeerTx() {
 
 	for orgmsp in ManagementPeerOrgMSP RecClientPeerOrgMSP; do
 
@@ -49,7 +49,7 @@ createAncorPeerTx() {
 }
 
 createChannel() {
-	setGlobals ManagementPeerOrg
+	setGlobals ManagementPeerOrg 0
 	# Poll in case the raft leader is not set yet
 	local rc=1
 	local COUNTER=1
@@ -72,7 +72,7 @@ createChannel() {
 # queryCommitted ORG
 joinChannel() {
   ORG=$1
-  setGlobals $ORG
+  setGlobals $ORG $2
 	local rc=1
 	local COUNTER=1
 	## Sometimes Join takes time, hence retry
@@ -87,12 +87,12 @@ joinChannel() {
 	done
 	cat log.txt
 	echo
-	verifyResult $res "After $MAX_RETRY attempts, peer0.org${ORG} has failed to join channel '$CHANNEL_NAME' "
+	verifyResult $res "After $MAX_RETRY attempts, peer$2.${ORG} has failed to join channel '$CHANNEL_NAME' "
 }
 
 updateAnchorPeers() {
   ORG=$1
-  setGlobals $ORG
+  setGlobals $ORG $2
 	local rc=1
 	local COUNTER=1
 	## Sometimes Join takes time, hence retry
@@ -106,7 +106,7 @@ updateAnchorPeers() {
 		COUNTER=$(expr $COUNTER + 1)
 	done
 	cat log.txt
-  verifyResult $res "Anchor peer update failed"
+  verifyResult $res "Anchor peer update failed peer$2.${ORG}"
   echo "===================== Anchor peers updated for org '$CORE_PEER_LOCALMSPID' on channel '$CHANNEL_NAME' ===================== "
   sleep $DELAY
   echo
@@ -128,7 +128,7 @@ createChannelTx
 
 ## Create anchorpeertx
 echo "### Generating channel configuration transaction '${CHANNEL_NAME}.tx' ###"
-createAncorPeerTx
+createAnchorPeerTx
 
 FABRIC_CFG_PATH=$PWD/../config/
 
@@ -138,15 +138,17 @@ createChannel
 
 ## Join all the peers to the channel
 echo "Join ManagementPeerOrg peers to the channel..."
-joinChannel ManagementPeerOrg
+joinChannel ManagementPeerOrg 0
+joinChannel ManagementPeerOrg 1
 echo "Join RecClientPeerOrg peers to the channel..."
-joinChannel RecClientPeerOrg
+joinChannel RecClientPeerOrg 0
+joinChannel RecClientPeerOrg 1
 
 ## Set the anchor peers for each org in the channel
 echo "Updating anchor peers for management-peer-org..."
-updateAnchorPeers ManagementPeerOrg
+updateAnchorPeers ManagementPeerOrg 0
 echo "Updating anchor peers for rec-client-peer-org..."
-updateAnchorPeers RecClientPeerOrg
+updateAnchorPeers RecClientPeerOrg 0
 
 echo
 echo "========= Channel successfully joined =========== "
