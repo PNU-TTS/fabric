@@ -105,6 +105,36 @@ function createManagementPeerOrg {
 
   cp ${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/msp/config.yaml ${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/users/Admin@management-peer-org.pnu.com/msp/config.yaml
 
+
+  echo
+	echo "Register peer1"
+  echo
+  set -x
+	fabric-ca-client register --caname ca-management-peer-org --id.name peer1 --id.secret peer1pw --id.type peer --tls.certfiles ${PWD}/organizations/fabric-ca/management-peer-org/tls-cert.pem
+  set +x
+
+  mkdir -p organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer1.management-peer-org.pnu.com
+
+  echo
+  echo "## Generate the peer1 msp"
+  echo
+  set -x
+	fabric-ca-client enroll -u https://peer1:peer1pw@localhost:7054 --caname ca-management-peer-org -M ${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer1.management-peer-org.pnu.com/msp --csr.hosts peer1.management-peer-org.pnu.com --tls.certfiles ${PWD}/organizations/fabric-ca/management-peer-org/tls-cert.pem
+  set +x
+
+  cp ${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/msp/config.yaml ${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer1.management-peer-org.pnu.com/msp/config.yaml
+
+  echo
+  echo "## Generate the peer1-tls certificates"
+  echo
+  set -x
+  fabric-ca-client enroll -u https://peer1:peer1pw@localhost:7054 --caname ca-management-peer-org -M ${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer1.management-peer-org.pnu.com/tls --enrollment.profile tls --csr.hosts peer1.management-peer-org.pnu.com --csr.hosts localhost --tls.certfiles ${PWD}/organizations/fabric-ca/management-peer-org/tls-cert.pem
+  set +x
+
+  cp ${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer1.management-peer-org.pnu.com/tls/tlscacerts/* ${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer1.management-peer-org.pnu.com/tls/ca.crt
+  cp ${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer1.management-peer-org.pnu.com/tls/signcerts/* ${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer1.management-peer-org.pnu.com/tls/server.crt
+  cp ${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer1.management-peer-org.pnu.com/tls/keystore/* ${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer1.management-peer-org.pnu.com/tls/server.key
+
 }
 
 
@@ -212,6 +242,37 @@ function createRecClientPeerOrg {
   set +x
 
   cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/msp/config.yaml ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/users/Admin@rec-client-peer-org.pnu.com/msp/config.yaml
+
+
+  echo
+	echo "Register peer1"
+  echo
+  set -x
+	fabric-ca-client register --caname ca-rec-client-peer-org --id.name peer1 --id.secret peer1pw --id.type peer --tls.certfiles ${PWD}/organizations/fabric-ca/rec-client-peer-org/tls-cert.pem
+  set +x
+
+  mkdir -p organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com
+
+  echo
+  echo "## Generate the peer1 msp"
+  echo
+  set -x
+	fabric-ca-client enroll -u https://peer1:peer1pw@localhost:8054 --caname ca-rec-client-peer-org -M ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/msp --csr.hosts peer1.rec-client-peer-org.pnu.com --tls.certfiles ${PWD}/organizations/fabric-ca/rec-client-peer-org/tls-cert.pem
+  set +x
+
+  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/msp/config.yaml ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/msp/config.yaml
+
+  echo
+  echo "## Generate the peer1-tls certificates"
+  echo
+  set -x
+  fabric-ca-client enroll -u https://peer1:peer1pw@localhost:8054 --caname ca-rec-client-peer-org -M ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls --enrollment.profile tls --csr.hosts peer1.rec-client-peer-org.pnu.com --csr.hosts localhost --tls.certfiles ${PWD}/organizations/fabric-ca/rec-client-peer-org/tls-cert.pem
+  set +x
+
+
+  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/tlscacerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/ca.crt
+  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/signcerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/server.crt
+  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/keystore/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/server.key
 
 }
 
