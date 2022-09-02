@@ -12,7 +12,6 @@ export PEER0_MANAGEMENT_PEER_ORG_CA=${PWD}/organizations/peerOrganizations/manag
 export PEER1_MANAGEMENT_PEER_ORG_CA=${PWD}/organizations/peerOrganizations/management-peer-org.pnu.com/peers/peer1.management-peer-org.pnu.com/tls/ca.crt
 export PEER0_REC_CLIENT_PEER_ORG_CA=${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/ca.crt
 export PEER1_REC_CLIENT_PEER_ORG_CA=${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/ca.crt
-export PEER0_ORG3_CA=${PWD}/organizations/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt
 
 # Set OrdererOrg.Admin globals
 setOrdererGlobals() {
@@ -50,12 +49,6 @@ setGlobals() {
       export CORE_PEER_TLS_ROOTCERT_FILE=$PEER1_REC_CLIENT_PEER_ORG_CA
       export CORE_PEER_ADDRESS=localhost:10051
     fi
-
-  elif [ $USING_ORG -eq 3 ]; then
-    export CORE_PEER_LOCALMSPID="Org3MSP"
-    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORG3_CA
-    export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp
-    export CORE_PEER_ADDRESS=localhost:11051
   else
     echo "================== ERROR !!! ORG Unknown =================="
   fi
