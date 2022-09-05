@@ -9,7 +9,7 @@
 const { Contract } = require('fabric-contract-api');
 
 function printMethodEntry(functionName) { console.info('========= START: ' + functionName + ' =========') }
-function printMethodExit(functionName) { console.info('========= FINISH: ' + functionName + ' E =========') }
+function printMethodExit(functionName) { console.info('========= FINISH: ' + functionName + ' =========') }
 
 function Transaction(id, target, price, quantity, supplier, buyer, registeredDate, executedDate) {
     this.id = id;
@@ -67,6 +67,12 @@ class PnuCC extends Contract {
         printMethodExit('Create New Transaction ID');
     }
 
+    /**
+     * 인증서 구매
+     * 
+     * @param {거래 내역 ID} id 
+     * @param {구매자 ID} buyer 
+     */
     async executeTransaction(ctx, id, buyer) {
         printMethodEntry(`Execute Transaction ID: ${id}`);
 
@@ -85,6 +91,11 @@ class PnuCC extends Contract {
         printMethodExit(`Execute Transaction ID: ${id}`);
     }
 
+    /**
+     * ID 값으로 거래 내역 조회 
+     * 
+     * @param {거래 내역 ID} id 
+     */
     async queryTransactionById(ctx, id) {
         printMethodEntry('Query Transaction By Id: ${id}');
 
@@ -97,6 +108,10 @@ class PnuCC extends Contract {
         return transactionAsBytes.toString();
     }
 
+    /**
+     * 모든 거래 내역 조회
+     * 
+     */
     async queryAllTransactions(ctx) {
         printMethodEntry('Query All Transactions');
         const allResults = [];
@@ -116,6 +131,10 @@ class PnuCC extends Contract {
         return JSON.stringify(allResults);
     }
 
+    /**
+     * 구매가 완료되지 않은 모든 거래 내역 조회
+     * 
+     */
     async queryUnexecutedTransactions(ctx) {
         printMethodEntry('Query Unexecuted Transactions');
         const allResults = [];
@@ -137,6 +156,10 @@ class PnuCC extends Contract {
         return JSON.stringify(allResults);
     }
 
+    /**
+     * 구매가 완료된 모든 거래 내역 조회
+     * 
+     */
     async queryExecutedTransactions(ctx) {
         printMethodEntry('Query Unexecuted Transactions');
         const allResults = [];
@@ -155,6 +178,58 @@ class PnuCC extends Contract {
         }
 
         printMethodExit('Query All Transactions');
+        return JSON.stringify(allResults);
+    }
+
+    /**
+     * 공급자 ID로 거래 내역 조회
+     * 
+     * @param {공급자 ID} supplier 
+     */
+    async queryTransactionBySupplier(ctx, supplier) {
+        printMethodEntry('Query Transactions By Supplier');
+        const allResults = [];
+        
+        for await (const {key, value} of ctx.stub.getStateByRange('', '')) {
+            const strValue = Buffer.from(value).toString('utf8');
+            let transaction;
+            try {
+                transaction = JSON.parse(strValue);
+                if (transaction.supplier == supplier) {
+                    allResults.push({ Transaction: transaction });
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        printMethodExit('Query Transactions By Supplier');
+        return JSON.stringify(allResults);
+    }
+
+    /**
+     * 구매자 ID 값으로 거래 내역 조회
+     * 
+     * @param {구매자 ID} buyer  
+     */
+    async queryTransactionByBuyer(ctx, buyer) {
+        printMethodEntry('Query Transactions By Buyer');
+        const allResults = [];
+        
+        for await (const {key, value} of ctx.stub.getStateByRange('', '')) {
+            const strValue = Buffer.from(value).toString('utf8');
+            let transaction;
+            try {
+                transaction = JSON.parse(strValue);
+                if (transaction.buyer == buyer) {
+                    allResults.push({ Transaction: transaction });
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        printMethodExit('Query Transactions By Buyer');
         return JSON.stringify(allResults);
     }
 }
