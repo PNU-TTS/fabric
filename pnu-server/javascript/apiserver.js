@@ -129,6 +129,74 @@ app.get('/query/transaction/:transactionId', async function (req, res) {
 });
 
 /**
+ * 공급자 ID로 거래 내역 조회
+ */
+app.post('/query/transaction/by-supplier/', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get('appUser');
+        if (!identity) {
+            res.status(401).json({error: 'An identity for the user "appUser" does not exist in the wallet'});
+        }
+
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: 'appUser', discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        await contract.submitTransaction('queryTransactionBySupplier', 
+            req.body.supplier,
+        )
+
+        res.status(200).json({response: "Successfully queried transaction"});
+        await gateway.disconnect();
+        
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
+
+/**
+ * 구매자 ID로 거래 내역 조회
+ */
+app.post('/query/transaction/by-buyer/', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get('appUser');
+        if (!identity) {
+            res.status(401).json({error: 'An identity for the user "appUser" does not exist in the wallet'});
+        }
+        
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: 'appUser', discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        await contract.submitTransaction('queryTransactionBySupplier', 
+            req.body.buyer,
+        )
+
+        res.status(200).json({response: "Successfully queried transaction"});
+        await gateway.disconnect();
+        
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
+
+/**
  * REC 매도 등록 API
  * 
  * @method  POST
