@@ -13,6 +13,133 @@ const ccpPath = path.resolve(__dirname, '..', '..', 'pnu-network', 'organization
 function printSystemLog(functionName) { console.info('========= ' + functionName + ' =========') }
 
 /**
+ * 인증서 등록
+ * 
+ * @param {String: 구매자 ID} supplier
+ * @param {Int: 판매 수량} quantity 
+ * @param {Bool: 제주도 발전 여부} is_jeju
+ * @param {Int: 공급 날짜} supply_date
+ * @param {Int: 만료 날짜} expire_date
+ */
+ app.post('/certificate/register/', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get(req.body.supplier);
+        if (!identity) {
+            res.status(401).json({error: `An identity for the user ${req.body.supplier} does not exist in the wallet`});
+        }
+
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: `${req.body.supplier}`, discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        await contract.submitTransaction('registerCertificate', 
+            req.body.supplier,
+            req.body.quantity,
+            req.body.is_jeju,
+            req.body.supply_date,
+            req.body.expire_date
+        )
+
+        res.status(200).json({response: "Successfully added certificate"});
+        await gateway.disconnect();
+        
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
+
+/**
+ * REC 판매 등록 API
+ * 
+ * @method  POST
+ * 
+ * @param target    Django에 등록된 REC ID 값
+ * @param price     REC 개당 가격
+ * @param quantity  REC 개수
+ * @param supplier  REC 공급자
+ */
+ app.post('/create/transaction/', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get(req.body.supplier);
+        if (!identity) {
+            res.status(401).json({error: `An identity for the user "${req.body.supplier}" does not exist in the wallet`});
+        }
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: req.body.supplier, discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        await contract.submitTransaction('createNewTransaction', 
+            req.body.target,
+            req.body.price,
+            req.body.quantity,
+            req.body.supplier,
+        )
+
+        res.status(200).json({response: "Successfully created transaction"});
+        await gateway.disconnect();
+        
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
+
+/**
+ * REC 매수 API
+ * 
+ * @method  POST
+ * 
+ * @param id        Transaction ID
+ * @param buyer     구매자 ID
+ */
+ app.post('/executeTransaction/', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get(req.body.buyer);
+        if (!identity) {
+            res.status(401).json({error: `An identity for the user "${req.body.buyer}" does not exist in the wallet`});
+        }
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: req.body.buyer, discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        await contract.submitTransaction('executeTransaction', 
+            req.body.id,
+            req.body.buyer
+        )
+
+        res.status(200).json({response: "Successfully executed transaction"});
+        await gateway.disconnect();
+        
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
+
+
+/**
  * REC 거래 ID 값을 기반으로 조회하는 API
  */
 app.get('/query/transaction/:transactionId', async function (req, res) {
@@ -189,88 +316,6 @@ app.post('/query/transaction/by-buyer/', async function (req, res) {
         )
 
         res.status(200).json({response: "Successfully queried transaction"});
-        await gateway.disconnect();
-        
-    } catch (error) {
-        res.status(500).json({error: error});
-    }
-});
-
-/**
- * REC 매도 등록 API
- * 
- * @method  POST
- * 
- * @param target    Django에 등록된 REC ID 값
- * @param price     REC 개당 가격
- * @param quantity  REC 개수
- * @param supplier  REC 공급자
- */
-app.post('/create/transaction/', async function (req, res) {
-    try {
-        const walletPath = path.join(process.cwd(), 'wallet');
-        const wallet = await Wallets.newFileSystemWallet(walletPath);
-        console.log(`Wallet path: ${walletPath}`);
-        console.log(`CCP path: ${ccpPath}`);
-
-        const identity = await wallet.get(req.body.supplier);
-        if (!identity) {
-            res.status(401).json({error: `An identity for the user "${req.body.supplier}" does not exist in the wallet`});
-        }
-        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
-        const gateway = new Gateway();
-        await gateway.connect(ccp, { wallet, identity: req.body.supplier, discovery: { enabled: true, asLocalhost: true } });
-
-        const network = await gateway.getNetwork('rec-trade-channel');
-        const contract = network.getContract('pnucc');
-
-        await contract.submitTransaction('createNewTransaction', 
-            req.body.target,
-            req.body.price,
-            req.body.quantity,
-            req.body.supplier,
-        )
-
-        res.status(200).json({response: "Successfully created transaction"});
-        await gateway.disconnect();
-        
-    } catch (error) {
-        res.status(500).json({error: error});
-    }
-});
-
-/**
- * REC 매수 API
- * 
- * @method  POST
- * 
- * @param id        Transaction ID
- * @param buyer     구매자 ID
- */
- app.post('/executeTransaction/', async function (req, res) {
-    try {
-        const walletPath = path.join(process.cwd(), 'wallet');
-        const wallet = await Wallets.newFileSystemWallet(walletPath);
-        console.log(`Wallet path: ${walletPath}`);
-        console.log(`CCP path: ${ccpPath}`);
-
-        const identity = await wallet.get(req.body.buyer);
-        if (!identity) {
-            res.status(401).json({error: `An identity for the user "${req.body.buyer}" does not exist in the wallet`});
-        }
-        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
-        const gateway = new Gateway();
-        await gateway.connect(ccp, { wallet, identity: req.body.buyer, discovery: { enabled: true, asLocalhost: true } });
-
-        const network = await gateway.getNetwork('rec-trade-channel');
-        const contract = network.getContract('pnucc');
-
-        await contract.submitTransaction('executeTransaction', 
-            req.body.id,
-            req.body.buyer
-        )
-
-        res.status(200).json({response: "Successfully executed transaction"});
         await gateway.disconnect();
         
     } catch (error) {
