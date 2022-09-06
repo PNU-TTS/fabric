@@ -11,6 +11,8 @@ const { Contract } = require('fabric-contract-api');
 function printMethodEntry(functionName) { console.info('========= START: ' + functionName + ' =========') }
 function printMethodExit(functionName) { console.info('========= FINISH: ' + functionName + ' =========') }
 
+function IDGenerator(name, id) { return `${name}_${id}` }
+
 function Transaction(id, target, price, quantity, supplier, buyer, registeredDate, executedDate) {
     this.id = id;
     this.target = target;
@@ -22,6 +24,14 @@ function Transaction(id, target, price, quantity, supplier, buyer, registeredDat
 
     this.registeredDate = registeredDate;
     this.executedDate = executedDate;
+}
+
+function Certificate(id, supplier, quantity, is_jeju, supply_date, expire_date) {
+    this.id = id;
+    this.quantity = quantity;
+    this.is_jeju = is_jeju;
+    this.supply_date = supply_date;
+    this.expire_date = expire_date;
 }
 
 class PnuCC extends Contract {
@@ -44,15 +54,61 @@ class PnuCC extends Contract {
         }
     }
 
-    // REC 매도 등록
-    async createNewTransaction(ctx, target, price, quantity, supplier) {
-        printMethodEntry('Create New Transaction');
+    /**
+     * 인증서 등록
+     * 
+     * @param {공급자 ID} supplier 
+     * @param {인증서 수량} quantity 
+     * @param {제주도 발전 여부} is_jeju 
+     * @param {공급 일자} supply_date 
+     * @param {만료 일자} expire_date 
+     */
+    async registerCertificate(ctx, supplier, quantity, is_jeju, supply_date, expire_date) {
+        printMethodEntry('Register New Certificate');
 
         const currentDateTime = new Date();
         const currentTimeInSeconds = parseInt(currentDateTime.getTime() / 1000);
 
+        const id = IDGenerator("CERTIFICATE", currentTimeInSeconds);
+        const certificate = new Certificate(
+            id = id,
+            supplier = supplier,
+            quantity = quantity,
+            is_jeju = is_jeju,
+            supply_date = supply_date,
+            expire_date = expire_date
+        )
+
+        console.log(`${JSON.stringify(certificate)}`);
+        
+        await ctx.stub.putState(`${id}`, Buffer.from(JSON.stringify(certificate)));
+
+        printMethodExit('Register New Certificate');
+    }
+
+    /**
+     * 인증서 판매 등록
+     * 
+     * @param {인증서 ID} target 
+     * @param {인증서 개당 가격} price 
+     * @param {인증서 판매 수량} quantity 
+     * @param {공급자 ID} supplier 
+     */
+    async createNewTransaction(ctx, target, price, quantity, supplier) {
+        printMethodEntry('Create New Transaction');
+
+        let certificateAsBytes = await ctx.stub.getState(target);
+        if (!this.isDataValid(certificateAsBytes)) { throw new Error(`${target} does not exist`); }
+        const certificate = JSON.parse(certificateAsBytes);
+        if (certificate.quantity < quantity) { throw new Error(`${target}'s quantity is not enough!`); }
+
+        const currentDateTime = new Date();
+        const currentTimeInSeconds = parseInt(currentDateTime.getTime() / 1000);
+        
+        const id = IDGenerator("TRANSACTION", this.NEXT_TRANSACTION_ID);
+        
         const transaction = new Transaction(
-            this.NEXT_TRANSACTION_ID,
+            id,
             target, price, quantity,
             supplier, null,
             currentTimeInSeconds,
@@ -61,7 +117,10 @@ class PnuCC extends Contract {
 
         console.log(`${JSON.stringify(transaction)}`);
         
-        await ctx.stub.putState(`${this.NEXT_TRANSACTION_ID}`, Buffer.from(JSON.stringify(transaction)));
+        await ctx.stub.putState(transaction.printMethodExit, Buffer.from(JSON.stringify(transaction)));
+        
+        certificate.quantity -= quantity;
+        await ctx.stub.putState(certificate.id, Buffer.from(JSON.stringify(certificate)));
 
         this.NEXT_TRANSACTION_ID += 1;
         printMethodExit('Create New Transaction ID');
