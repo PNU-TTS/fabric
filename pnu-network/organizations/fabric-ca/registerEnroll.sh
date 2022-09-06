@@ -156,16 +156,16 @@ function createRecClientPeerOrg {
   echo 'NodeOUs:
   Enable: true
   ClientOUIdentifier:
-    Certificate: cacerts/localhost-8054-ca-rec-client-peer-org.pem
+    Certificate: intermediatecerts/localhost-8054-ca-rec-client-peer-org.pem
     OrganizationalUnitIdentifier: client
   PeerOUIdentifier:
-    Certificate: cacerts/localhost-8054-ca-rec-client-peer-org.pem
+    Certificate: intermediatecerts/localhost-8054-ca-rec-client-peer-org.pem
     OrganizationalUnitIdentifier: peer
   AdminOUIdentifier:
-    Certificate: cacerts/localhost-8054-ca-rec-client-peer-org.pem
+    Certificate: intermediatecerts/localhost-8054-ca-rec-client-peer-org.pem
     OrganizationalUnitIdentifier: admin
   OrdererOUIdentifier:
-    Certificate: cacerts/localhost-8054-ca-rec-client-peer-org.pem
+    Certificate: intermediatecerts/localhost-8054-ca-rec-client-peer-org.pem
     OrganizationalUnitIdentifier: orderer' > ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/msp/config.yaml
 
   echo
@@ -209,18 +209,18 @@ function createRecClientPeerOrg {
   set +x
 
 
-  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/tlscacerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/ca.crt
+  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/tlsintermediatecerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/ca.crt
   cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/signcerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/server.crt
   cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/keystore/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/server.key
 
   mkdir ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/msp/tlscacerts
-  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/tlscacerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/msp/tlscacerts/ca.crt
+  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/tlsintermediatecerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/msp/tlscacerts/ca.crt
 
   mkdir ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/tlsca
-  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/tlscacerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/tlsca/tlsca.rec-client-peer-org.pnu.com-cert.pem
+  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/tls/tlsintermediatecerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/tlsca/tlsca.rec-client-peer-org.pnu.com-cert.pem
 
   mkdir ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/ca
-  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/msp/cacerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/ca/ca.rec-client-peer-org.pnu.com-cert.pem
+  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer0.rec-client-peer-org.pnu.com/msp/intermediatecerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/ca/ca.rec-client-peer-org.pnu.com-cert.pem
 
   mkdir -p organizations/peerOrganizations/rec-client-peer-org.pnu.com/users
   mkdir -p organizations/peerOrganizations/rec-client-peer-org.pnu.com/users/User1@rec-client-peer-org.pnu.com
@@ -270,7 +270,7 @@ function createRecClientPeerOrg {
   set +x
 
 
-  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/tlscacerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/ca.crt
+  cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/tlsintermediatecerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/ca.crt
   cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/signcerts/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/server.crt
   cp ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/keystore/* ${PWD}/organizations/peerOrganizations/rec-client-peer-org.pnu.com/peers/peer1.rec-client-peer-org.pnu.com/tls/server.key
 
