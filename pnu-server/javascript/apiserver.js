@@ -238,7 +238,7 @@ app.get('/transaction/query/:transactionId', async function (req, res) {
 /**
  * 모든 거래 내역을 조회하는 API
  */
- app.get('/transaction/query/all/', async function (req, res) {
+ app.get('/transaction/query-all/', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -267,7 +267,7 @@ app.get('/transaction/query/:transactionId', async function (req, res) {
 /**
  * 미체결된 거래 내역을 조회하는 API
  */
- app.get('/transaction/query/nonexecuted/', async function (req, res) {
+ app.get('/transaction/query-nonexecuted/', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -296,7 +296,7 @@ app.get('/transaction/query/:transactionId', async function (req, res) {
 /**
  * 체결된 거래 내역을 조회하는 API
  */
- app.get('/transaction/query/executed/', async function (req, res) {
+ app.get('/transaction/query-executed/', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -325,7 +325,7 @@ app.get('/transaction/query/:transactionId', async function (req, res) {
 /**
  * 공급자 ID로 거래 내역 조회
  */
-app.post('/transaction/query/by-supplier/', async function (req, res) {
+app.post('/transaction/query-by-supplier/', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -359,7 +359,7 @@ app.post('/transaction/query/by-supplier/', async function (req, res) {
 /**
  * 구매자 ID로 거래 내역 조회
  */
-app.post('/transaction/query/by-buyer/', async function (req, res) {
+app.post('/transaction/query-by-buyer/', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
