@@ -28,6 +28,7 @@ function Transaction(id, target, price, quantity, supplier, buyer, registeredDat
 
 function Certificate(id, supplier, quantity, is_jeju, supply_date, expire_date) {
     this.id = id;
+    this.supplier = supplier;
     this.quantity = quantity;
     this.is_jeju = is_jeju;
     this.supply_date = supply_date;
@@ -71,12 +72,12 @@ class PnuCC extends Contract {
 
         const id = IDGenerator("CERTIFICATE", currentTimeInSeconds);
         const certificate = new Certificate(
-            id = id,
-            supplier = supplier,
-            quantity = quantity,
-            is_jeju = is_jeju,
-            supply_date = supply_date,
-            expire_date = expire_date
+            id,
+            supplier,
+            quantity,
+            is_jeju,
+            supply_date,
+            expire_date
         )
 
         console.log(`${JSON.stringify(certificate)}`);
@@ -84,6 +85,32 @@ class PnuCC extends Contract {
         await ctx.stub.putState(`${id}`, Buffer.from(JSON.stringify(certificate)));
 
         printMethodExit('Register New Certificate');
+    }
+
+    /**
+     * 등록된 인증서 조회
+     * 
+     * @param {공급자 ID} supplier 
+     */
+     async queryCertificates(ctx, supplier) {
+        printMethodEntry('Query REC');
+        const allResults = [];
+        
+        for await (const {key, value} of ctx.stub.getStateByRange('', '')) {
+            const strValue = Buffer.from(value).toString('utf8');
+            let transaction;
+            try {
+                transaction = JSON.parse(strValue);
+                if ( transaction.id.startsWith("CERTIFICATE") && transaction.supplier == supplier ) {
+                    allResults.push({ Transaction: transaction });
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        printMethodExit('Query All Transactions');
+        return JSON.stringify(allResults);
     }
 
     /**
@@ -117,7 +144,7 @@ class PnuCC extends Contract {
 
         console.log(`${JSON.stringify(transaction)}`);
         
-        await ctx.stub.putState(transaction.printMethodExit, Buffer.from(JSON.stringify(transaction)));
+        await ctx.stub.putState(transaction.id, Buffer.from(JSON.stringify(transaction)));
         
         certificate.quantity -= quantity;
         await ctx.stub.putState(certificate.id, Buffer.from(JSON.stringify(certificate)));
@@ -156,14 +183,14 @@ class PnuCC extends Contract {
      * @param {거래 내역 ID} id 
      */
     async queryTransactionById(ctx, id) {
-        printMethodEntry('Query Transaction By Id: ${id}');
+        printMethodEntry(`Query Transaction By Id: ${id}`);
 
         let transactionAsBytes = await ctx.stub.getState(id);
         if (!this.isDataValid(transactionAsBytes)) {
             throw new Error(`Certificate with ${id} does not exist`);
         }
         
-        printMethodExit('Query Transaction By Id: ${id}');
+        printMethodExit(`Query Transaction By Id: ${id}`);
         return transactionAsBytes.toString();
     }
 
@@ -180,7 +207,9 @@ class PnuCC extends Contract {
             let transaction;
             try {
                 transaction = JSON.parse(strValue);
-                allResults.push({ Transaction: transaction });
+                if ( transaction.id.startsWith("TRANSACTION") ) {
+                    allResults.push({ Transaction: transaction });
+                }
             } catch (err) {
                 console.log(err);
             }
@@ -203,7 +232,7 @@ class PnuCC extends Contract {
             let transaction;
             try {
                 transaction = JSON.parse(strValue);
-                if (transaction.executedDate == null) {
+                if ( transaction.id.startsWith("TRANSACTION") && transaction.executedDate == null ) {
                     allResults.push({ Transaction: transaction });
                 }
             } catch (err) {
@@ -228,7 +257,7 @@ class PnuCC extends Contract {
             let transaction;
             try {
                 transaction = JSON.parse(strValue);
-                if (transaction.executedDate != null) {
+                if ( transaction.id.startsWith("TRANSACTION") && transaction.executedDate != null ) {
                     allResults.push({ Transaction: transaction });
                 }
             } catch (err) {
@@ -254,7 +283,7 @@ class PnuCC extends Contract {
             let transaction;
             try {
                 transaction = JSON.parse(strValue);
-                if (transaction.supplier == supplier) {
+                if ( transaction.id.startsWith("TRANSACTION") && transaction.supplier == supplier) {
                     allResults.push({ Transaction: transaction });
                 }
             } catch (err) {
@@ -280,7 +309,7 @@ class PnuCC extends Contract {
             let transaction;
             try {
                 transaction = JSON.parse(strValue);
-                if (transaction.buyer == buyer) {
+                if ( transaction.id.startsWith("TRANSACTION") && transaction.buyer == buyer) {
                     allResults.push({ Transaction: transaction });
                 }
             } catch (err) {

@@ -57,6 +57,36 @@ function printSystemLog(functionName) { console.info('========= ' + functionName
 });
 
 /**
+ * 해당 유저의 등록된 인증서를 조회하는 API
+ * 
+ */
+ app.get('/query/certificates/:supplierId', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get('appUser');
+        if (!identity) {
+            res.status(401).json({error: 'Run the registerUser.js application before retrying'});
+        }
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: 'appUser', discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        const result = await contract.evaluateTransaction('queryCertificates', req.params.supplierId);
+
+        res.status(200).json({response: result.toString()});
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
+
+/**
  * REC 판매 등록 API
  * 
  * @method  POST
