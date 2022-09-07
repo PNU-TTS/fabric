@@ -91,7 +91,7 @@ function printSystemLog(functionName) { console.info('========= ' + functionName
  * 
  * @method  POST
  * 
- * @param target    Django에 등록된 REC ID 값
+ * @param target    REC ID 값
  * @param price     REC 개당 가격
  * @param quantity  REC 개수
  * @param supplier  REC 공급자
@@ -103,13 +103,13 @@ function printSystemLog(functionName) { console.info('========= ' + functionName
         console.log(`Wallet path: ${walletPath}`);
         console.log(`CCP path: ${ccpPath}`);
 
-        const identity = await wallet.get(req.body.supplier);
+        const identity = await wallet.get(`${req.body.supplier}`);
         if (!identity) {
             res.status(401).json({error: `An identity for the user "${req.body.supplier}" does not exist in the wallet`});
         }
         const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
         const gateway = new Gateway();
-        await gateway.connect(ccp, { wallet, identity: req.body.supplier, discovery: { enabled: true, asLocalhost: true } });
+        await gateway.connect(ccp, { wallet, identity: `${req.body.supplier}`, discovery: { enabled: true, asLocalhost: true } });
 
         const network = await gateway.getNetwork('rec-trade-channel');
         const contract = network.getContract('pnucc');
@@ -144,13 +144,13 @@ function printSystemLog(functionName) { console.info('========= ' + functionName
         console.log(`Wallet path: ${walletPath}`);
         console.log(`CCP path: ${ccpPath}`);
 
-        const identity = await wallet.get(req.body.buyer);
+        const identity = await wallet.get(`${req.body.buyer}`);
         if (!identity) {
             res.status(401).json({error: `An identity for the user "${req.body.buyer}" does not exist in the wallet`});
         }
         const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
         const gateway = new Gateway();
-        await gateway.connect(ccp, { wallet, identity: req.body.buyer, discovery: { enabled: true, asLocalhost: true } });
+        await gateway.connect(ccp, { wallet, identity: `${req.body.buyer}`, discovery: { enabled: true, asLocalhost: true } });
 
         const network = await gateway.getNetwork('rec-trade-channel');
         const contract = network.getContract('pnucc');
