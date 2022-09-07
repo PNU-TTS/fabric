@@ -136,15 +136,15 @@ class PnuCC extends Contract {
         const id = IDGenerator("TRANSACTION", this.NEXT_TRANSACTION_ID);
         
         const transaction = new Transaction(
-            id=id,
-            target=target, 
-            price=price, 
-            quantity=quantity,
-            supplier=supplier, 
-            buyer=null,
-            registeredDate=currentTimeInSeconds,
-            executedDate=null,
-            is_confirmed = false
+            id,
+            target, 
+            price, 
+            quantity,
+            supplier, 
+            null,
+            currentTimeInSeconds,
+            null,
+            false
         );
 
         console.log(`${JSON.stringify(transaction)}`);
