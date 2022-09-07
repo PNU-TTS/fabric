@@ -60,7 +60,7 @@ function printSystemLog(functionName) { console.info('========= ' + functionName
  * 해당 유저의 등록된 인증서를 조회하는 API
  * 
  */
- app.get('/query/certificates/:supplierId', async function (req, res) {
+ app.get('/certificate/query/:supplierId', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -96,7 +96,7 @@ function printSystemLog(functionName) { console.info('========= ' + functionName
  * @param quantity  REC 개수
  * @param supplier  REC 공급자
  */
- app.post('/create/transaction/', async function (req, res) {
+ app.post('/transaction/create/', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -137,7 +137,7 @@ function printSystemLog(functionName) { console.info('========= ' + functionName
  * @param id        Transaction ID
  * @param buyer     구매자 ID
  */
- app.post('/executeTransaction/', async function (req, res) {
+ app.post('/transaction/execute/', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -168,11 +168,48 @@ function printSystemLog(functionName) { console.info('========= ' + functionName
     }
 });
 
+/**
+ * 거래 승인 API
+ * 
+ * @method  POST
+ * 
+ * @param id        Transaction ID
+ */
+ app.post('/transaction/approve/', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get('appUser');
+        if (!identity) {
+            res.status(401).json({error: `An identity for the user "appUser" does not exist in the wallet`});
+        }
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: 'appUser', discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        await contract.submitTransaction('approveTransaction', 
+            req.body.id,
+        )
+
+        res.status(200).json({response: "Successfully executed transaction"});
+        await gateway.disconnect();
+        
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
+
 
 /**
  * REC 거래 ID 값을 기반으로 조회하는 API
  */
-app.get('/query/transaction/:transactionId', async function (req, res) {
+app.get('/transaction/query/:transactionId', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -201,7 +238,7 @@ app.get('/query/transaction/:transactionId', async function (req, res) {
 /**
  * 모든 거래 내역을 조회하는 API
  */
- app.get('/query/allTransactions/', async function (req, res) {
+ app.get('/transaction/query/all/', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -230,7 +267,7 @@ app.get('/query/transaction/:transactionId', async function (req, res) {
 /**
  * 미체결된 거래 내역을 조회하는 API
  */
- app.get('/queryUnexecutedTransactions/', async function (req, res) {
+ app.get('/transaction/query/nonexecuted/', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -259,7 +296,7 @@ app.get('/query/transaction/:transactionId', async function (req, res) {
 /**
  * 체결된 거래 내역을 조회하는 API
  */
- app.get('/query/executedTransactions/', async function (req, res) {
+ app.get('/transaction/query/executed/', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -288,7 +325,7 @@ app.get('/query/transaction/:transactionId', async function (req, res) {
 /**
  * 공급자 ID로 거래 내역 조회
  */
-app.post('/query/transaction/by-supplier/', async function (req, res) {
+app.post('/transaction/query/by-supplier/', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);
@@ -322,7 +359,7 @@ app.post('/query/transaction/by-supplier/', async function (req, res) {
 /**
  * 구매자 ID로 거래 내역 조회
  */
-app.post('/query/transaction/by-buyer/', async function (req, res) {
+app.post('/transaction/query/by-buyer/', async function (req, res) {
     try {
         const walletPath = path.join(process.cwd(), 'wallet');
         const wallet = await Wallets.newFileSystemWallet(walletPath);

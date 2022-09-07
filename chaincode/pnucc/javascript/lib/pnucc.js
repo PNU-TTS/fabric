@@ -13,7 +13,7 @@ function printMethodExit(functionName) { console.info('========= FINISH: ' + fun
 
 function IDGenerator(name, id) { return `${name}_${id}` }
 
-function Transaction(id, target, price, quantity, supplier, buyer, registeredDate, executedDate) {
+function Transaction(id, target, price, quantity, supplier, buyer, registeredDate, executedDate, is_confirmed) {
     this.id = id;
     this.target = target;
     this.price = price;
@@ -24,6 +24,7 @@ function Transaction(id, target, price, quantity, supplier, buyer, registeredDat
 
     this.registeredDate = registeredDate;
     this.executedDate = executedDate;
+    this.is_confirmed = is_confirmed;
 }
 
 function Certificate(id, supplier, quantity, is_jeju, supply_date, expire_date) {
@@ -92,7 +93,7 @@ class PnuCC extends Contract {
      * 
      * @param {공급자 ID} supplier 
      */
-     async queryCertificates(ctx, supplier) {
+    async queryCertificates(ctx, supplier) {
         printMethodEntry('Query REC');
         const allResults = [];
         
@@ -135,11 +136,15 @@ class PnuCC extends Contract {
         const id = IDGenerator("TRANSACTION", this.NEXT_TRANSACTION_ID);
         
         const transaction = new Transaction(
-            id,
-            target, price, quantity,
-            supplier, null,
-            currentTimeInSeconds,
-            null
+            id=id,
+            target=target, 
+            price=price, 
+            quantity=quantity,
+            supplier=supplier, 
+            buyer=null,
+            registeredDate=currentTimeInSeconds,
+            executedDate=null,
+            is_confirmed = false
         );
 
         console.log(`${JSON.stringify(transaction)}`);
@@ -175,6 +180,27 @@ class PnuCC extends Contract {
 
         await ctx.stub.putState(id, Buffer.from(JSON.stringify(transaction)));
         printMethodExit(`Execute Transaction ID: ${id}`);
+    }
+
+    /**
+     * 인증서 거래 승인
+     * 
+     * @param {거래 내역 ID} id 
+     */
+    async approveTransaction(ctx, id) {
+        printMethodEntry(`Approve Transaction ID: ${id}`);
+
+        let transactionAsBytes = await ctx.stub.getState(id);
+
+        if (!this.isDataValid(transactionAsBytes)) {
+            throw new Error(`Certificate with ${id} does not exist`);
+        }
+        
+        const transaction = JSON.parse(transactionAsBytes);
+        transaction.is_confirmed = true;
+
+        await ctx.stub.putState(id, Buffer.from(JSON.stringify(transaction)));
+        printMethodExit(`Approve Transaction ID: ${id}`);
     }
 
     /**
