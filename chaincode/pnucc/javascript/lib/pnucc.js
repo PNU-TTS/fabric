@@ -346,6 +346,58 @@ class PnuCC extends Contract {
         printMethodExit('Query Transactions By Buyer');
         return JSON.stringify(allResults);
     }
+
+    /**
+     * 등록된 잔여 인증서 조회
+     * 
+     * @param {공급자 ID} supplier 
+     */
+     async queryCertificateSumBySupplier(ctx, supplier) {
+        printMethodEntry('Query REC balance');
+        var sum = 0;
+        
+        for await (const {key, value} of ctx.stub.getStateByRange('', '')) {
+            const strValue = Buffer.from(value).toString('utf8');
+            let transaction;
+            try {
+                transaction = JSON.parse(strValue);
+                if ( transaction.id.startsWith("CERTIFICATE") && transaction.supplier == supplier ) {
+                    sum += parseInt(transaction.quantity);
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        printMethodExit('Query REC balance');
+        return JSON.stringify({"sum": sum});
+    }
+
+    /**
+     * 구매자 ID 값으로 구매한 총 REC 조회
+     * 
+     * @param {구매자 ID} buyer  
+     */
+    async queryCertificateSumByBuyer(ctx, buyer) {
+        printMethodEntry('Query REC By Buyer');
+        var sum = 0;
+        
+        for await (const {key, value} of ctx.stub.getStateByRange('', '')) {
+            const strValue = Buffer.from(value).toString('utf8');
+            let transaction;
+            try {
+                transaction = JSON.parse(strValue);
+                if ( transaction.id.startsWith("TRANSACTION") && transaction.buyer == buyer && transaction.is_confirmed == true ) {
+                    sum += parseInt(transaction.quantity);
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        printMethodExit('Query REC By Buyer');
+        return JSON.stringify({"sum": sum});
+    }
 }
 
 module.exports = PnuCC;
