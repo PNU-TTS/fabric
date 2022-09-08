@@ -80,7 +80,67 @@ function printSystemLog(functionName) { console.info('========= ' + functionName
 
         const result = await contract.evaluateTransaction('queryCertificates', req.params.supplierId);
 
-        res.status(200).json({response: result.toString()});
+        res.status(200).json(JSON.parse(result.toString()));
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
+
+/**
+ * 해당 공급자의 등록된 인증서 합을 조회하는 API
+ * 
+ */
+ app.get('/certificate/query-sum-by-supplier/:supplierId', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get('appUser');
+        if (!identity) {
+            res.status(401).json({error: 'Run the registerUser.js application before retrying'});
+        }
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: 'appUser', discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        const result = await contract.evaluateTransaction('queryCertificateSumBySupplier', req.params.supplierId);
+
+        res.status(200).json(JSON.parse(result.toString()));
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
+
+/**
+ * 해당 구매자의 구매한 인증서 합을 조회하는 API
+ * 
+ */
+ app.get('/certificate/query-sum-by-buyer/:buyerId', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get('appUser');
+        if (!identity) {
+            res.status(401).json({error: 'Run the registerUser.js application before retrying'});
+        }
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: 'appUser', discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        const result = await contract.evaluateTransaction('queryCertificateSumByBuyer', req.params.buyerId);
+
+        res.status(200).json(JSON.parse(result.toString()));
     } catch (error) {
         res.status(500).json({error: error});
     }
@@ -229,7 +289,7 @@ app.get('/transaction/query/:transactionId', async function (req, res) {
         const contract = network.getContract('pnucc');
 
         const result = await contract.evaluateTransaction('queryTransactionById', req.params.transactionId);
-        res.status(200).json({response: result.toString()});
+        res.status(200).json(JSON.parse(result.toString()));
     } catch (error) {
         res.status(500).json({error: error});
     }
@@ -258,7 +318,7 @@ app.get('/transaction/query/:transactionId', async function (req, res) {
 
         const result = await contract.evaluateTransaction('queryAllTransactions');
 
-        res.status(200).json({response: result.toString()});
+        res.status(200).json(JSON.parse(result.toString()));
     } catch (error) {
         res.status(500).json({error: error});
     }
@@ -287,7 +347,7 @@ app.get('/transaction/query/:transactionId', async function (req, res) {
         const contract = network.getContract('pnucc');
 
         const result = await contract.evaluateTransaction('queryUnexecutedTransactions');
-        res.status(200).json({response: result.toString()});
+        res.status(200).json(JSON.parse(result.toString()));
     } catch (error) {
         res.status(500).json({error: error});
     }
@@ -316,7 +376,7 @@ app.get('/transaction/query/:transactionId', async function (req, res) {
         const contract = network.getContract('pnucc');
 
         const result = await contract.evaluateTransaction('queryExecutedTransactions');
-        res.status(200).json({response: result.toString()});
+        res.status(200).json(JSON.parse(result.toString()));
     } catch (error) {
         res.status(500).json({error: error});
     }
@@ -344,11 +404,11 @@ app.post('/transaction/query-by-supplier/', async function (req, res) {
         const network = await gateway.getNetwork('rec-trade-channel');
         const contract = network.getContract('pnucc');
 
-        await contract.submitTransaction('queryTransactionBySupplier', 
+        const result = await contract.submitTransaction('queryTransactionBySupplier', 
             req.body.supplier,
         )
 
-        res.status(200).json({response: "Successfully queried transaction"});
+        res.status(200).json(JSON.parse(result.toString()));
         await gateway.disconnect();
         
     } catch (error) {
@@ -378,11 +438,11 @@ app.post('/transaction/query-by-buyer/', async function (req, res) {
         const network = await gateway.getNetwork('rec-trade-channel');
         const contract = network.getContract('pnucc');
 
-        await contract.submitTransaction('queryTransactionBySupplier', 
+        const result = await contract.submitTransaction('queryTransactionBySupplier', 
             req.body.buyer,
         )
 
-        res.status(200).json({response: "Successfully queried transaction"});
+        res.status(200).json(JSON.parse(result.toString()));
         await gateway.disconnect();
         
     } catch (error) {
@@ -403,7 +463,7 @@ app.post('/register/', async function (req, res) {
         console.log(`Wallet path: ${walletPath}`);
         console.log(`CCP path: ${ccpPath}`);
 
-        const identity = await wallet.get(req.body.enrollmentID);
+        const identity = await wallet.get(`${req.body.enrollmentID}`);
         if (identity) {
             res.status(406).json({error: `"${req.body.enrollmentID}" already exist in the wallet`});
         }
@@ -422,12 +482,12 @@ app.post('/register/', async function (req, res) {
 
         const secret = await ca.register({
             affiliation: `rec-client-peer-org.${req.body.departmentName}`,
-            enrollmentID: req.body.enrollmentID,
+            enrollmentID: `${req.body.enrollmentID}`,
             role: 'client'
         }, adminUser);
 
         const enrollment = await ca.enroll({
-            enrollmentID: req.body.enrollmentID,
+            enrollmentID: `${req.body.enrollmentID}`,
             enrollmentSecret: secret
         });
 
@@ -440,7 +500,7 @@ app.post('/register/', async function (req, res) {
             type: 'X.509',
         };
 
-        await wallet.put(req.body.enrollmentID, x509Identity);
+        await wallet.put(`${req.body.enrollmentID}`, x509Identity);
         res.status(200).json({response: `Successfully register "${req.body.enrollmentID}" and imported it into the wallet`});
 
     } catch (error) {
