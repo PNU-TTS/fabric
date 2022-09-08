@@ -75,10 +75,10 @@ class PnuCC extends Contract {
         const certificate = new Certificate(
             id,
             supplier,
-            quantity,
-            is_jeju,
-            supply_date,
-            expire_date
+            quantity * 1,
+            is_jeju == "true",
+            supply_date * 1,
+            expire_date * 1
         )
 
         console.log(`${JSON.stringify(certificate)}`);
@@ -103,7 +103,7 @@ class PnuCC extends Contract {
             try {
                 transaction = JSON.parse(strValue);
                 if ( transaction.id.startsWith("CERTIFICATE") && transaction.supplier == supplier ) {
-                    allResults.push({ Transaction: transaction });
+                    allResults.push({ Certificate: transaction });
                 }
             } catch (err) {
                 console.log(err);
@@ -138,8 +138,8 @@ class PnuCC extends Contract {
         const transaction = new Transaction(
             id,
             target, 
-            price, 
-            quantity,
+            price * 1, 
+            quantity * 1,
             supplier, 
             null,
             currentTimeInSeconds,
