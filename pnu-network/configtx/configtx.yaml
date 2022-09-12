@@ -71,7 +71,7 @@ Organizations:
                 Rule: "OR('ManagementPeerOrgMSP.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('ManagementPeerOrgMSP.peer')"
+                Rule: "OR('ManagementPeerOrgMSP.peer', 'RecClientPeerOrgMSP.peer')"
 
         # leave this flag set to true.
         AnchorPeers:
@@ -106,7 +106,7 @@ Organizations:
                 Rule: "OR('RecClientPeerOrgMSP.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('RecClientPeerOrgMSP.peer')"
+                Rule: "OR('RecClientPeerOrgMSP.peer', 'ManagementPeerOrgMSP.peer')"
 
         AnchorPeers:
             # AnchorPeers defines the location of peers which can be used
