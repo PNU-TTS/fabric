@@ -398,6 +398,38 @@ class PnuCC extends Contract {
         printMethodExit('Query REC By Buyer');
         return JSON.stringify({"sum": sum});
     }
+
+    
+    async addExamples(ctx, amount) {
+        printMethodEntry('addExamples');
+        for (var i = 1; i < amount; i++) {
+            const currentDateTime = new Date();
+            currentDateTime.setDate(currentDateTime.getDate() - Math.floor(Math.random() * 30));
+            const currentTimeInSeconds = parseInt(currentDateTime.getTime() / 1000);
+            
+            const id = IDGenerator("TRANSACTION", this.NEXT_TRANSACTION_ID);
+            
+            const transaction = new Transaction(
+                id,
+                "sample_target",
+                Math.floor(Math.random() * (100000 - 10000)) + 10000, 
+                Math.floor(Math.random() * (1000 - 100)) + 100,
+                "sample_supplier", 
+                "sample_buyer",
+                currentTimeInSeconds,
+                currentTimeInSeconds,
+                false
+            );
+    
+            console.log(`${JSON.stringify(transaction)}`);
+            
+            await ctx.stub.putState(transaction.id, Buffer.from(JSON.stringify(transaction)));
+            
+            this.NEXT_TRANSACTION_ID += 1;
+          }
+        printMethodExit('Create New Transaction ID');
+    }
+
 }
 
 module.exports = PnuCC;
