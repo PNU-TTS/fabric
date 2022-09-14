@@ -399,6 +399,57 @@ class PnuCC extends Contract {
         return JSON.stringify({"sum": sum});
     }
 
+    /**
+     * 판매자 ID 값으로 승인되지 않은 거래 조회
+     * 
+     * @param {구매자 ID} supplier  
+     */
+     async queryNonConfirmedBySupplier(ctx, supplier) {
+        printMethodEntry('Query Non Confirmed By Supplier');
+        const allResults = [];
+        
+        for await (const {key, value} of ctx.stub.getStateByRange('', '')) {
+            const strValue = Buffer.from(value).toString('utf8');
+            let transaction;
+            try {
+                transaction = JSON.parse(strValue);
+                if ( transaction.id.startsWith("TRANSACTION") && transaction.supplier == supplier && transaction.executedDate != null && transaction.is_confirmed == false ) {
+                    allResults.push({ Transaction: transaction });
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        printMethodExit('Query Non Confirmed By Supplier');
+        return JSON.stringify(allResults);
+    }
+
+    /**
+     * 구매자 ID 값으로 승인되지 않은 거래 조회
+     * 
+     * @param {구매자 ID} buyer  
+     */
+     async queryNonConfirmedByBuyer(ctx, buyer) {
+        printMethodEntry('Query Non Confirmed By Buyer');
+        const allResults = [];
+        
+        for await (const {key, value} of ctx.stub.getStateByRange('', '')) {
+            const strValue = Buffer.from(value).toString('utf8');
+            let transaction;
+            try {
+                transaction = JSON.parse(strValue);
+                if ( transaction.id.startsWith("TRANSACTION") && transaction.buyer == buyer && transaction.is_confirmed == false ) {
+                    allResults.push({ Transaction: transaction });
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        printMethodExit('Query Non Confirmed By Buyer');
+        return JSON.stringify(allResults);
+    }
     
     async addExamples(ctx, amount) {
         printMethodEntry('addExamples');
