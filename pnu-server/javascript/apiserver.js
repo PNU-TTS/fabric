@@ -605,4 +605,55 @@ app.get('/addExamples/:amount', async function (req, res) {
     }
 });
 
+
+    /**
+     * 샘플 인증서 판매 등록
+     * 
+     * @param {인증서 ID} target 
+     * @param {인증서 개당 가격} price 
+     * @param {인증서 판매 수량} quantity 
+     * @param {공급자 ID} supplier  
+     * @param {구매자 ID} buyer  
+     * @param {등록 날짜} registeredDate
+     * @param {구매 날짜} executedDate
+     * @param {승인 여부} is_confirmed 
+     */
+ app.post('/transaction/createExample/', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get(`${req.body.supplier}`);
+        if (!identity) {
+            res.status(401).json({error: `An identity for the user "${req.body.supplier}" does not exist in the wallet`});
+        }
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: `${req.body.supplier}`, discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        await contract.submitTransaction('createExampleTransaction', 
+            req.body.target,
+            req.body.price,
+            req.body.quantity,
+            req.body.supplier,
+            req.body.buyer,
+            req.body.registeredDate,
+            req.body.executedDate,
+            req.body.is_confirmed,
+        )
+
+        res.status(200).json({response: "Successfully created transaction"});
+        await gateway.disconnect();
+        
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
+
+
 app.listen(8080);
