@@ -42,14 +42,12 @@ class PnuCC extends Contract {
 
     async initLedger(ctx) { 
         printMethodEntry('Initialize Ledger'); 
-        this.NEXT_TRANSACTION_ID = 1;
         
         for await (const {key, value} of ctx.stub.getStateByRange('', '')) {
             const strValue = Buffer.from(value).toString('utf8');
             let transaction;
             try {
                 transaction = JSON.parse(strValue);
-                this.NEXT_TRANSACTION_ID += 1;
             } catch (err) {
                 console.log(err);
             }
@@ -132,8 +130,8 @@ class PnuCC extends Contract {
 
         const currentDateTime = new Date();
         const currentTimeInSeconds = parseInt(currentDateTime.getTime() / 1000);
-        
-        const id = IDGenerator("TRANSACTION", this.NEXT_TRANSACTION_ID);
+
+        const id = IDGenerator("TRANSACTION", currentTimeInSeconds);
         
         const transaction = new Transaction(
             id,
@@ -154,7 +152,6 @@ class PnuCC extends Contract {
         certificate.quantity -= quantity;
         await ctx.stub.putState(certificate.id, Buffer.from(JSON.stringify(certificate)));
 
-        this.NEXT_TRANSACTION_ID += 1;
         printMethodExit('Create New Transaction ID');
     }
 
@@ -478,6 +475,50 @@ class PnuCC extends Contract {
             
             this.NEXT_TRANSACTION_ID += 1;
           }
+        printMethodExit('Create New Transaction ID');
+    }
+
+    /**
+     * 샘플 인증서 판매 등록
+     * 
+     * @param {인증서 ID} target 
+     * @param {인증서 개당 가격} price 
+     * @param {인증서 판매 수량} quantity 
+     * @param {공급자 ID} supplier  
+     * @param {구매자 ID} buyer  
+     * @param {등록 날짜} registeredDate
+     * @param {구매 날짜} executedDate
+     * @param {승인 여부} is_confirmed 
+     */
+     async createExampleTransaction(ctx, target, price, quantity, supplier, buyer, registeredDate, executedDate, is_confirmed) {
+        printMethodEntry('Create New Transaction');
+
+        let certificateAsBytes = await ctx.stub.getState(target);
+        if (!this.isDataValid(certificateAsBytes)) { throw new Error(`${target} does not exist`); }
+        const certificate = JSON.parse(certificateAsBytes);
+        if (certificate.quantity < quantity) { throw new Error(`${target}'s quantity is not enough!`); }
+
+        const id = IDGenerator("TRANSACTION", registeredDate);
+        
+        const transaction = new Transaction(
+            id,
+            target, 
+            price * 1, 
+            quantity * 1,
+            supplier, 
+            buyer,
+            registeredDate,
+            executedDate,
+            is_confirmed
+        );
+
+        console.log(`${JSON.stringify(transaction)}`);
+        
+        await ctx.stub.putState(transaction.id, Buffer.from(JSON.stringify(transaction)));
+        
+        certificate.quantity -= quantity;
+        await ctx.stub.putState(certificate.id, Buffer.from(JSON.stringify(certificate)));
+
         printMethodExit('Create New Transaction ID');
     }
 
