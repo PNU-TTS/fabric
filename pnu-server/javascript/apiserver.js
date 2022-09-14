@@ -451,6 +451,74 @@ app.post('/transaction/query-by-buyer/', async function (req, res) {
 });
 
 /**
+ * 구매자 ID로 승인되지 않은 거래 내역 조회
+ */
+ app.post('/transaction/query-non-confirmed-by-buyer/', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get('appUser');
+        if (!identity) {
+            res.status(401).json({error: 'An identity for the user "appUser" does not exist in the wallet'});
+        }
+        
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: 'appUser', discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        const result = await contract.submitTransaction('queryNonConfirmedByBuyer', 
+            req.body.buyer,
+        )
+
+        res.status(200).json(JSON.parse(result.toString()));
+        await gateway.disconnect();
+        
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
+
+/**
+ * 판매자 ID로 승인되지 않은 거래 내역 조회
+ */
+ app.post('/transaction/query-non-confirmed-by-supplier/', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get('appUser');
+        if (!identity) {
+            res.status(401).json({error: 'An identity for the user "appUser" does not exist in the wallet'});
+        }
+        
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));        
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: 'appUser', discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        const result = await contract.submitTransaction('queryNonConfirmedBySupplier', 
+            req.body.supplier,
+        )
+
+        res.status(200).json(JSON.parse(result.toString()));
+        await gateway.disconnect();
+        
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
+
+/**
  * 사용자 등록 API
  * 
  * @param departmentName    buyer 또는 supplier   
@@ -508,5 +576,33 @@ app.post('/register/', async function (req, res) {
     }
 });
 
+app.get('/addExamples/:amount', async function (req, res) {
+    try {
+        const walletPath = path.join(process.cwd(), 'wallet');
+        const wallet = await Wallets.newFileSystemWallet(walletPath);
+        console.log(`Wallet path: ${walletPath}`);
+        console.log(`CCP path: ${ccpPath}`);
+
+        const identity = await wallet.get('appUser');
+        if (!identity) {
+            res.status(401).json({error: 'An identity for the user "appUser" does not exist in the wallet'});
+        }
+
+        const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
+        const gateway = new Gateway();
+        await gateway.connect(ccp, { wallet, identity: 'appUser', discovery: { enabled: true, asLocalhost: true } });
+
+        const network = await gateway.getNetwork('rec-trade-channel');
+        const contract = network.getContract('pnucc');
+
+        await contract.submitTransaction('addExamples', 
+            req.params.amount
+        )
+        res.status(200).json({response: `Successfully added examples`});
+        await gateway.disconnect();
+    } catch (error) {
+        res.status(500).json({error: error});
+    }
+});
 
 app.listen(8080);
