@@ -438,7 +438,7 @@ app.post('/transaction/query-by-buyer/', async function (req, res) {
         const network = await gateway.getNetwork('rec-trade-channel');
         const contract = network.getContract('pnucc');
 
-        const result = await contract.submitTransaction('queryTransactionBySupplier', 
+        const result = await contract.submitTransaction('queryTransactionByBuyer', 
             req.body.buyer,
         )
 
